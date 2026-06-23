@@ -1,0 +1,11 @@
+#!/bin/bash
+set -e
+
+# Skip if this commit doesn't touch any .go files (e.g. docs-only changes).
+if ! git diff --cached --name-only --diff-filter=ACMRTUXB | grep -q '\.go$'; then
+  echo "pre-commit: no .go files staged, skipping checks."
+  exit 0
+fi
+
+echo "pre-commit: running build, vet, test, lint (make check)..."
+make check

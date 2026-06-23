@@ -1,4 +1,4 @@
-.PHONY: run build test mock lint migrate-up migrate-down tidy
+.PHONY: run build test mock lint migrate-up migrate-down tidy vet check install-hooks
 
 # ── Run ───────────────────────────────────────────────────
 run:
@@ -35,3 +35,20 @@ tidy:
 
 lint:
 	golangci-lint run ./...
+
+vet:
+	go vet ./...
+
+# ── Pre-commit / pre-push gate ───────────────────────────
+# Mirrors the CI workflow (.github/workflows/ci.yml) exactly, so a clean
+# `make check` locally means CI will be green too.
+check:
+	go build ./...
+	go vet ./...
+	go test ./... -race -cover
+	golangci-lint run ./...
+	@echo "All checks passed."
+
+install-hooks:
+	git config core.hooksPath .githooks
+	@echo "Git hooks path set to .githooks/ — pre-commit checks are now active for this clone."
