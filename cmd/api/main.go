@@ -37,7 +37,7 @@ func main() {
 	if err != nil {
 		panic(fmt.Sprintf("failed to init logger: %v", err))
 	}
-	defer log.Sync()
+	defer func() { _ = log.Sync() }()
 	response.SetLogger(log)
 
 	// ── Database ─────────────────────────────────────────────
@@ -92,7 +92,9 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(code)
-		json.NewEncoder(w).Encode(map[string]string{"status": status})
+		if err := json.NewEncoder(w).Encode(map[string]string{"status": status}); err != nil {
+			log.Error(fmt.Sprintf("failed to write health response: %v", err))
+		}
 	})
 
 	// ── Server ───────────────────────────────────────────────

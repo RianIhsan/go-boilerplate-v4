@@ -70,7 +70,9 @@ type errorResponseBody struct {
 func writeJSON(w http.ResponseWriter, status int, payload any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(payload)
+	if err := json.NewEncoder(w).Encode(payload); err != nil && log != nil {
+		log.Error("failed to write json response", zap.Error(err))
+	}
 }
 
 // Success sends a single-resource success response (GET by ID, POST, PUT).
