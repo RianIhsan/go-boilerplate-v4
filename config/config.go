@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -40,6 +42,11 @@ type JWTConfig struct {
 }
 
 func Load() (*Config, error) {
+	// Best-effort: only relevant for local `go run`/`make run`. In Docker or
+	// any environment where real env vars are already set, .env won't exist
+	// and that's fine — godotenv.Load only fills vars not already in os.Environ.
+	_ = godotenv.Load()
+
 	redisDB, err := strconv.Atoi(getEnv("REDIS_DB", "0"))
 	if err != nil {
 		redisDB = 0
