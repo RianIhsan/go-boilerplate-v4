@@ -1,0 +1,28 @@
+# Binaries
+bin/
+*.exe
+*.out
+
+# Environment
+.env
+*.env.local
+
+# Test coverage
+coverage.out
+coverage.html
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Go build cache
+vendor/
+
+# Claude Code
+CLAUDE.md
+.claude/
