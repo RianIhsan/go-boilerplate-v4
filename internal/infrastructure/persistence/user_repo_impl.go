@@ -3,12 +3,19 @@ package persistence
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/RianIhsan/go-boilerplate-v4/internal/domain/auth/entity"
 	authrepo "github.com/RianIhsan/go-boilerplate-v4/internal/domain/auth/repository"
 	apperrors "github.com/RianIhsan/go-boilerplate-v4/internal/shared/errors"
+	"github.com/lib/pq"
 )
+
+// pqUniqueViolation is the Postgres error code for a unique-constraint
+// violation (23505). Used to turn a racing duplicate INSERT into a domain
+// conflict error instead of a generic 500.
+const pqUniqueViolation = "23505"
 
 type userRepositoryImpl struct {
 	db *sql.DB
@@ -27,6 +34,10 @@ func (r *userRepositoryImpl) Create(ctx context.Context, user *entity.User) erro
 		user.ID, user.Name, user.Email, user.Password, user.CreatedAt, user.UpdatedAt,
 	)
 	if err != nil {
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) && pqErr.Code == pqUniqueViolation {
+			return apperrors.ErrConflict
+		}
 		return fmt.Errorf("userRepository.Create: %w", err)
 	}
 	return nil

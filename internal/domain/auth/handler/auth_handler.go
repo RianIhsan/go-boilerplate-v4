@@ -6,6 +6,7 @@ import (
 
 	authdto "github.com/RianIhsan/go-boilerplate-v4/internal/domain/auth/dto"
 	authusecase "github.com/RianIhsan/go-boilerplate-v4/internal/domain/auth/usecase"
+	"github.com/RianIhsan/go-boilerplate-v4/internal/shared/constants"
 	apperrors "github.com/RianIhsan/go-boilerplate-v4/internal/shared/errors"
 	"github.com/RianIhsan/go-boilerplate-v4/internal/shared/response"
 	"github.com/RianIhsan/go-boilerplate-v4/internal/shared/validator"
@@ -28,6 +29,8 @@ func NewAuthHandler(authUsecase authusecase.AuthUsecase) *AuthHandler {
 // @Success 201 {object} response.Response
 // @Router /auth/register [post]
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, constants.MaxRequestBodyBytes)
+
 	var req authdto.RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.Error(w, r, apperrors.ErrBadRequest)
@@ -57,6 +60,8 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} response.Response
 // @Router /auth/login [post]
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, constants.MaxRequestBodyBytes)
+
 	var req authdto.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.Error(w, r, apperrors.ErrBadRequest)

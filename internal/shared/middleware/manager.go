@@ -2,11 +2,20 @@ package middleware
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/RianIhsan/go-boilerplate-v4/pkg/jwt"
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
+)
+
+// AuthRateLimitRequests/Window bound the number of unauthenticated
+// login/register attempts a single IP can make, to blunt brute-force and
+// credential-stuffing attempts against those endpoints.
+const (
+	AuthRateLimitRequests = 10
+	AuthRateLimitWindow   = time.Minute
 )
 
 // Manager is the single place new middlewares get registered. Global,
@@ -16,6 +25,7 @@ import (
 type Manager interface {
 	Apply(r chi.Router)
 	Auth() func(http.Handler) http.Handler
+	AuthRateLimit() func(http.Handler) http.Handler
 }
 
 type manager struct {
@@ -36,4 +46,8 @@ func (m *manager) Apply(r chi.Router) {
 
 func (m *manager) Auth() func(http.Handler) http.Handler {
 	return Auth(m.jwtSvc)
+}
+
+func (m *manager) AuthRateLimit() func(http.Handler) http.Handler {
+	return RateLimit(AuthRateLimitRequests, AuthRateLimitWindow)
 }

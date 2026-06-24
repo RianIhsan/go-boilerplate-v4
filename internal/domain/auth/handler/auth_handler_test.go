@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
 	authdto "github.com/RianIhsan/go-boilerplate-v4/internal/domain/auth/dto"
 	"github.com/RianIhsan/go-boilerplate-v4/internal/domain/auth/handler"
 	"github.com/RianIhsan/go-boilerplate-v4/internal/mock"
+	"github.com/RianIhsan/go-boilerplate-v4/internal/shared/constants"
 	apperrors "github.com/RianIhsan/go-boilerplate-v4/internal/shared/errors"
 	"github.com/golang/mock/gomock"
 )
@@ -74,6 +76,17 @@ func TestAuthHandler_Register(t *testing.T) {
 					Return(nil, apperrors.ErrConflict)
 			},
 			expectedStatus: http.StatusConflict,
+		},
+		{
+			name: "error - body exceeds max size",
+			body: map[string]string{
+				"name":     "John Doe",
+				"email":    "john@example.com",
+				"password": "password123",
+				"padding":  strings.Repeat("a", constants.MaxRequestBodyBytes+1),
+			},
+			setupMock:      func(uc *mock.MockAuthUsecase) {},
+			expectedStatus: http.StatusBadRequest,
 		},
 	}
 
@@ -154,6 +167,16 @@ func TestAuthHandler_Login(t *testing.T) {
 			body:           map[string]string{},
 			setupMock:      func(uc *mock.MockAuthUsecase) {},
 			expectedStatus: http.StatusUnprocessableEntity,
+		},
+		{
+			name: "error - body exceeds max size",
+			body: map[string]string{
+				"email":    "john@example.com",
+				"password": "password123",
+				"padding":  strings.Repeat("a", constants.MaxRequestBodyBytes+1),
+			},
+			setupMock:      func(uc *mock.MockAuthUsecase) {},
+			expectedStatus: http.StatusBadRequest,
 		},
 	}
 

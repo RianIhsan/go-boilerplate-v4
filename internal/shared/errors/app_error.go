@@ -38,6 +38,7 @@ var (
 	ErrInternalServer    = New(http.StatusInternalServerError, "INTERNAL_ERROR", "an unexpected error occurred. please try again later", "")
 	ErrInvalidToken      = New(http.StatusUnauthorized, "UNAUTHORIZED", "invalid or expired token", "")
 	ErrInvalidCredential = New(http.StatusUnauthorized, "INVALID_CREDENTIALS", "invalid email or password", "")
+	ErrTooManyRequests   = New(http.StatusTooManyRequests, "TOO_MANY_REQUESTS", "too many requests, please try again later", "")
 )
 
 // TodoNotFound builds a 404 with details scoped to the specific todo id.

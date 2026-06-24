@@ -104,6 +104,32 @@ func TestAuthUsecase_Register(t *testing.T) {
 			expectedErr: apperrors.ErrInternalServer,
 		},
 		{
+			name: "error - email conflict from racing duplicate insert",
+			fields: fields{
+				setupMock: func(userRepo *mock.MockUserRepository, jwtSvc *mock.MockJWTService) {
+					// FindByEmail pre-check passes (no existing row yet), but
+					// a concurrent registration with the same email wins the
+					// race and the DB's unique constraint rejects this insert.
+					userRepo.EXPECT().
+						FindByEmail(gomock.Any(), "racer@example.com").
+						Return(nil, errors.New("not found"))
+					userRepo.EXPECT().
+						Create(gomock.Any(), gomock.Any()).
+						Return(apperrors.ErrConflict)
+				},
+			},
+			args: args{
+				ctx: context.Background(),
+				req: &authdto.RegisterRequest{
+					Name:     "Racer",
+					Email:    "racer@example.com",
+					Password: "password123",
+				},
+			},
+			wantErr:     true,
+			expectedErr: apperrors.UserConflict("racer@example.com"),
+		},
+		{
 			name: "error - hash password fails",
 			fields: fields{
 				setupMock: func(userRepo *mock.MockUserRepository, jwtSvc *mock.MockJWTService) {

@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	authdto "github.com/RianIhsan/go-boilerplate-v4/internal/domain/auth/dto"
@@ -46,6 +47,11 @@ func (u *authUsecaseImpl) Register(ctx context.Context, req *authdto.RegisterReq
 	}
 
 	if err := u.userRepo.Create(ctx, user); err != nil {
+		if errors.Is(err, apperrors.ErrConflict) {
+			// Two concurrent registrations raced past the FindByEmail check
+			// above; the DB's unique constraint is the real source of truth.
+			return nil, apperrors.UserConflict(user.Email)
+		}
 		return nil, apperrors.Wrap(apperrors.ErrInternalServer, err)
 	}
 

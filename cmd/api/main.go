@@ -77,7 +77,7 @@ func main() {
 	mw.Apply(r)
 
 	r.Route("/api/v1", func(r chi.Router) {
-		authhandler.RegisterRoutes(r, authH)
+		authhandler.RegisterRoutes(r, authH, mw.AuthRateLimit())
 		todohandler.RegisterRoutes(r, todoH, mw.Auth())
 	})
 

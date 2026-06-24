@@ -19,4 +19,9 @@ const (
 
 	CacheKeyUserPrefix = "user:"
 	CacheTTLUser       = 300 // seconds
+
+	// MaxRequestBodyBytes caps the size of a decoded JSON request body.
+	// Applied to endpoints reachable without authentication (e.g. register,
+	// login) so an oversized payload can't be used for memory-exhaustion DoS.
+	MaxRequestBodyBytes = 1 << 20 // 1 MiB
 )
