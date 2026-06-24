@@ -20,14 +20,6 @@ func NewAuthHandler(authUsecase authusecase.AuthUsecase) *AuthHandler {
 	return &AuthHandler{authUsecase: authUsecase}
 }
 
-// Register godoc
-// @Summary Register a new user
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Param request body dto.RegisterRequest true "Register payload"
-// @Success 201 {object} response.Response
-// @Router /auth/register [post]
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, constants.MaxRequestBodyBytes)
 
@@ -51,14 +43,6 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	response.Success(w, http.StatusCreated, "user registered successfully", result)
 }
 
-// Login godoc
-// @Summary Login user
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Param request body dto.LoginRequest true "Login payload"
-// @Success 200 {object} response.Response
-// @Router /auth/login [post]
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, constants.MaxRequestBodyBytes)
 
