@@ -3,6 +3,7 @@ package usecase_test
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -96,6 +97,53 @@ func TestAuthUsecase_Register(t *testing.T) {
 				req: &authdto.RegisterRequest{
 					Name:     "New User",
 					Email:    "new@example.com",
+					Password: "password123",
+				},
+			},
+			wantErr:     true,
+			expectedErr: apperrors.ErrInternalServer,
+		},
+		{
+			name: "error - hash password fails",
+			fields: fields{
+				setupMock: func(userRepo *mock.MockUserRepository, jwtSvc *mock.MockJWTService) {
+					userRepo.EXPECT().
+						FindByEmail(gomock.Any(), "toolong@example.com").
+						Return(nil, errors.New("not found"))
+				},
+			},
+			args: args{
+				ctx: context.Background(),
+				req: &authdto.RegisterRequest{
+					Name:  "Too Long",
+					Email: "toolong@example.com",
+					// bcrypt rejects passwords longer than 72 bytes.
+					Password: strings.Repeat("a", 73),
+				},
+			},
+			wantErr:     true,
+			expectedErr: apperrors.ErrInternalServer,
+		},
+		{
+			name: "error - token generation fails",
+			fields: fields{
+				setupMock: func(userRepo *mock.MockUserRepository, jwtSvc *mock.MockJWTService) {
+					userRepo.EXPECT().
+						FindByEmail(gomock.Any(), "tokenfail@example.com").
+						Return(nil, errors.New("not found"))
+					userRepo.EXPECT().
+						Create(gomock.Any(), gomock.Any()).
+						Return(nil)
+					jwtSvc.EXPECT().
+						GenerateToken(gomock.Any(), "tokenfail@example.com").
+						Return("", errors.New("signing error"))
+				},
+			},
+			args: args{
+				ctx: context.Background(),
+				req: &authdto.RegisterRequest{
+					Name:     "Token Fail",
+					Email:    "tokenfail@example.com",
 					Password: "password123",
 				},
 			},
@@ -231,6 +279,32 @@ func TestAuthUsecase_Login(t *testing.T) {
 			},
 			wantErr:     true,
 			expectedErr: apperrors.ErrInvalidCredential,
+		},
+		{
+			name: "error - token generation fails",
+			fields: fields{
+				setupMock: func(userRepo *mock.MockUserRepository, jwtSvc *mock.MockJWTService) {
+					userRepo.EXPECT().
+						FindByEmail(gomock.Any(), "john@example.com").
+						Return(&entity.User{
+							ID:       "user-id-1",
+							Email:    "john@example.com",
+							Password: hashedPassword,
+						}, nil)
+					jwtSvc.EXPECT().
+						GenerateToken("user-id-1", "john@example.com").
+						Return("", errors.New("signing error"))
+				},
+			},
+			args: args{
+				ctx: context.Background(),
+				req: &authdto.LoginRequest{
+					Email:    "john@example.com",
+					Password: "password123",
+				},
+			},
+			wantErr:     true,
+			expectedErr: apperrors.ErrInternalServer,
 		},
 	}
 

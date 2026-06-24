@@ -249,6 +249,17 @@ func TestTodoUsecase_Update(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name:   "success - update description only",
+			todoID: mockTodoID,
+			userID: mockUserID,
+			req:    &tododto.UpdateTodoRequest{Description: "Updated description"},
+			setupMock: func(repo *mock.MockTodoRepository) {
+				repo.EXPECT().FindByID(gomock.Any(), mockTodoID, mockUserID).Return(mockTodo, nil)
+				repo.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			wantErr: false,
+		},
+		{
 			name:   "error - todo not found",
 			todoID: "ghost-id",
 			userID: mockUserID,
@@ -258,6 +269,18 @@ func TestTodoUsecase_Update(t *testing.T) {
 			},
 			wantErr:     true,
 			expectedErr: apperrors.ErrNotFound,
+		},
+		{
+			name:   "error - repository update fails",
+			todoID: mockTodoID,
+			userID: mockUserID,
+			req:    &tododto.UpdateTodoRequest{Title: "New Title"},
+			setupMock: func(repo *mock.MockTodoRepository) {
+				repo.EXPECT().FindByID(gomock.Any(), mockTodoID, mockUserID).Return(mockTodo, nil)
+				repo.EXPECT().Update(gomock.Any(), gomock.Any()).Return(errors.New("db error"))
+			},
+			wantErr:     true,
+			expectedErr: apperrors.ErrInternalServer,
 		},
 	}
 
@@ -309,6 +332,16 @@ func TestTodoUsecase_Delete(t *testing.T) {
 			userID: mockUserID,
 			setupMock: func(repo *mock.MockTodoRepository) {
 				repo.EXPECT().FindByID(gomock.Any(), "ghost-id", mockUserID).Return(nil, errors.New("not found"))
+			},
+			wantErr: true,
+		},
+		{
+			name:   "error - repository delete fails",
+			todoID: mockTodoID,
+			userID: mockUserID,
+			setupMock: func(repo *mock.MockTodoRepository) {
+				repo.EXPECT().FindByID(gomock.Any(), mockTodoID, mockUserID).Return(mockTodo, nil)
+				repo.EXPECT().Delete(gomock.Any(), mockTodoID, mockUserID).Return(errors.New("db error"))
 			},
 			wantErr: true,
 		},
