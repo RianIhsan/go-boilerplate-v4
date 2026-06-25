@@ -14,9 +14,6 @@ func init() {
 	validate = validator.New()
 }
 
-// Validate runs struct validation and returns one response.ErrorField per
-// failed field. Sensitive fields (anything with "password" in the name) have
-// their value redacted to nil so it never round-trips back to the client.
 func Validate(s interface{}) []response.ErrorField {
 	err := validate.Struct(s)
 	if err == nil {

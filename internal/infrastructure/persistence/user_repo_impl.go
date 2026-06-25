@@ -12,9 +12,6 @@ import (
 	"github.com/lib/pq"
 )
 
-// pqUniqueViolation is the Postgres error code for a unique-constraint
-// violation (23505). Used to turn a racing duplicate INSERT into a domain
-// conflict error instead of a generic 500.
 const pqUniqueViolation = "23505"
 
 type userRepositoryImpl struct {

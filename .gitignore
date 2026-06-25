@@ -3,6 +3,12 @@ bin/
 *.exe
 *.out
 
+# Temp uploads (file metadata parsing)
+tmp/
+
+# Local sample files for manually testing the file-metadata endpoint
+/app/
+
 # Environment
 .env
 *.env.local

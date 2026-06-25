@@ -107,9 +107,6 @@ func TestAuthUsecase_Register(t *testing.T) {
 			name: "error - email conflict from racing duplicate insert",
 			fields: fields{
 				setupMock: func(userRepo *mock.MockUserRepository, jwtSvc *mock.MockJWTService) {
-					// FindByEmail pre-check passes (no existing row yet), but
-					// a concurrent registration with the same email wins the
-					// race and the DB's unique constraint rejects this insert.
 					userRepo.EXPECT().
 						FindByEmail(gomock.Any(), "racer@example.com").
 						Return(nil, errors.New("not found"))
@@ -141,9 +138,8 @@ func TestAuthUsecase_Register(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 				req: &authdto.RegisterRequest{
-					Name:  "Too Long",
-					Email: "toolong@example.com",
-					// bcrypt rejects passwords longer than 72 bytes.
+					Name:     "Too Long",
+					Email:    "toolong@example.com",
 					Password: strings.Repeat("a", 73),
 				},
 			},

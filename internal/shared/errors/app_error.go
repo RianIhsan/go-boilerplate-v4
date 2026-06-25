@@ -2,9 +2,6 @@ package errors
 
 import "net/http"
 
-// AppError is the internal error type returned by usecases. Details is safe to
-// expose to API clients; Cause (set via Wrap) is the real underlying error and
-// is only ever written to server-side logs, never serialized.
 type AppError struct {
 	Code    int    `json:"-"`
 	ErrCode string `json:"-"`
@@ -21,8 +18,6 @@ func New(code int, errCode, message, details string) *AppError {
 	return &AppError{Code: code, ErrCode: errCode, Message: message, Details: details}
 }
 
-// Wrap attaches the real underlying cause to a base AppError for server-side
-// logging, without changing what gets sent to the client.
 func Wrap(base *AppError, cause error) *AppError {
 	wrapped := *base
 	wrapped.Cause = cause
@@ -41,12 +36,22 @@ var (
 	ErrTooManyRequests   = New(http.StatusTooManyRequests, "TOO_MANY_REQUESTS", "too many requests, please try again later", "")
 )
 
-// TodoNotFound builds a 404 with details scoped to the specific todo id.
 func TodoNotFound(id string) *AppError {
 	return New(http.StatusNotFound, "TODO_NOT_FOUND", "todo not found", "no todo with id "+id+" exists")
 }
 
-// UserConflict builds a 409 with details scoped to the specific email.
 func UserConflict(email string) *AppError {
 	return New(http.StatusConflict, "DUPLICATE_ENTRY", "user already exists", "a user with email "+email+" already exists")
+}
+
+func UnsupportedFileType() *AppError {
+	return New(http.StatusUnprocessableEntity, "UNSUPPORTED_FILE_TYPE", "unsupported file type", "could not recognize file as one of: apk, exe, deb, rpm, dmg")
+}
+
+func FileTooLarge() *AppError {
+	return New(http.StatusRequestEntityTooLarge, "FILE_TOO_LARGE", "file exceeds the maximum allowed size", "")
+}
+
+func FileParseFailed() *AppError {
+	return New(http.StatusUnprocessableEntity, "FILE_PARSE_FAILED", "could not parse file metadata", "")
 }

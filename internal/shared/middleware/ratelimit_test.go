@@ -18,8 +18,6 @@ func TestRateLimit(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	}))
 
-	// httptest.NewRequest defaults RemoteAddr to the same value for every
-	// request, so these all land in the same rate-limit bucket.
 	for i := range limit {
 		req := httptest.NewRequest(http.MethodPost, "/auth/login", nil)
 		rr := httptest.NewRecorder()

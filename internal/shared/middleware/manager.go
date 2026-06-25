@@ -10,22 +10,21 @@ import (
 	"go.uber.org/zap"
 )
 
-// AuthRateLimitRequests/Window bound the number of unauthenticated
-// login/register attempts a single IP can make, to blunt brute-force and
-// credential-stuffing attempts against those endpoints.
 const (
 	AuthRateLimitRequests = 10
 	AuthRateLimitWindow   = time.Minute
 )
 
-// Manager is the single place new middlewares get registered. Global,
-// always-on middlewares go in Apply; middlewares that only apply to specific
-// route groups (like Auth) get their own accessor so handlers' RegisterRoutes
-// can pull them in explicitly.
+const (
+	UploadRateLimitRequests = 5
+	UploadRateLimitWindow   = time.Minute
+)
+
 type Manager interface {
 	Apply(r chi.Router)
 	Auth() func(http.Handler) http.Handler
 	AuthRateLimit() func(http.Handler) http.Handler
+	UploadRateLimit() func(http.Handler) http.Handler
 }
 
 type manager struct {
@@ -50,4 +49,8 @@ func (m *manager) Auth() func(http.Handler) http.Handler {
 
 func (m *manager) AuthRateLimit() func(http.Handler) http.Handler {
 	return RateLimit(AuthRateLimitRequests, AuthRateLimitWindow)
+}
+
+func (m *manager) UploadRateLimit() func(http.Handler) http.Handler {
+	return RateLimit(UploadRateLimitRequests, UploadRateLimitWindow)
 }

@@ -11,11 +11,8 @@ import (
 
 var log *zap.Logger
 
-// SetLogger lets main wire a logger so 5xx errors get the real cause logged
-// server-side, correlated by the same trace_id returned to the client.
 func SetLogger(l *zap.Logger) { log = l }
 
-// Meta carries pagination info for list responses.
 type Meta struct {
 	Page       int   `json:"page"`
 	Limit      int   `json:"limit"`
@@ -25,7 +22,6 @@ type Meta struct {
 	HasPrev    bool  `json:"has_prev"`
 }
 
-// NewMeta builds Meta from already-computed pagination values.
 func NewMeta(page, limit int, total int64, totalPages int) *Meta {
 	return &Meta{
 		Page:       page,
@@ -37,14 +33,12 @@ func NewMeta(page, limit int, total int64, totalPages int) *Meta {
 	}
 }
 
-// ErrorField is a single field-level validation failure.
 type ErrorField struct {
 	Field   string `json:"field"`
 	Message string `json:"message"`
 	Value   any    `json:"value"`
 }
 
-// ErrorBody is the `error` object included in every error response.
 type ErrorBody struct {
 	Code    string       `json:"code"`
 	Details string       `json:"details"`
@@ -75,7 +69,6 @@ func writeJSON(w http.ResponseWriter, status int, payload any) {
 	}
 }
 
-// Success sends a single-resource success response (GET by ID, POST, PUT).
 func Success(w http.ResponseWriter, status int, message string, data any) {
 	writeJSON(w, status, successBody{
 		Success: true,
@@ -86,7 +79,6 @@ func Success(w http.ResponseWriter, status int, message string, data any) {
 	})
 }
 
-// SuccessList sends a success response for a paginated list (GET index).
 func SuccessList(w http.ResponseWriter, message string, data any, meta *Meta) {
 	writeJSON(w, http.StatusOK, successBody{
 		Success: true,
@@ -97,14 +89,10 @@ func SuccessList(w http.ResponseWriter, message string, data any, meta *Meta) {
 	})
 }
 
-// NoContent sends a 204 with no body, the preferred shape for DELETE.
 func NoContent(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// Error maps an error to the standard error envelope. Non-AppError values are
-// treated as internal errors. 5xx causes are logged server-side with the
-// request's trace_id; only safe Details ever reach the client.
 func Error(w http.ResponseWriter, r *http.Request, err error) {
 	appErr, ok := err.(*apperrors.AppError)
 	if !ok {
@@ -133,7 +121,6 @@ func Error(w http.ResponseWriter, r *http.Request, err error) {
 	})
 }
 
-// ValidationError sends a 422 with per-field validation failures.
 func ValidationError(w http.ResponseWriter, r *http.Request, fields []ErrorField) {
 	writeJSON(w, http.StatusUnprocessableEntity, errorResponseBody{
 		Success: false,

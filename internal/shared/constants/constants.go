@@ -1,7 +1,5 @@
 package constants
 
-// ContextKey is a distinct type for context.WithValue keys, avoiding
-// collisions with keys set by other packages using plain strings.
 type ContextKey string
 
 const (
@@ -18,10 +16,11 @@ const (
 	TokenTypeRefresh = "refresh"
 
 	CacheKeyUserPrefix = "user:"
-	CacheTTLUser       = 300 // seconds
+	CacheTTLUser       = 300
 
-	// MaxRequestBodyBytes caps the size of a decoded JSON request body.
-	// Applied to endpoints reachable without authentication (e.g. register,
-	// login) so an oversized payload can't be used for memory-exhaustion DoS.
-	MaxRequestBodyBytes = 1 << 20 // 1 MiB
+	MaxRequestBodyBytes = 1 << 20
+
+	UploadTempDir = "tmp/uploads"
+
+	MaxUploadFileBytes = 500 << 20
 )
