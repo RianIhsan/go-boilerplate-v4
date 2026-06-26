@@ -16,6 +16,9 @@ import (
 const (
 	AuthRateLimitRequests = 10
 	AuthRateLimitWindow   = time.Minute
+
+	PublicRateLimitRequests = 30
+	PublicRateLimitWindow   = time.Minute
 )
 
 // Manager is the single place new middlewares get registered. Global,
@@ -26,6 +29,7 @@ type Manager interface {
 	Apply(r chi.Router)
 	Auth() func(http.Handler) http.Handler
 	AuthRateLimit() func(http.Handler) http.Handler
+	PublicRateLimit() func(http.Handler) http.Handler
 }
 
 type manager struct {
@@ -50,4 +54,8 @@ func (m *manager) Auth() func(http.Handler) http.Handler {
 
 func (m *manager) AuthRateLimit() func(http.Handler) http.Handler {
 	return RateLimit(AuthRateLimitRequests, AuthRateLimitWindow)
+}
+
+func (m *manager) PublicRateLimit() func(http.Handler) http.Handler {
+	return RateLimit(PublicRateLimitRequests, PublicRateLimitWindow)
 }

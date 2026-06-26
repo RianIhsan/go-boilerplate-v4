@@ -15,6 +15,12 @@ import (
 	"github.com/RianIhsan/go-boilerplate-v4/config"
 	authhandler "github.com/RianIhsan/go-boilerplate-v4/internal/domain/auth/handler"
 	authusecase "github.com/RianIhsan/go-boilerplate-v4/internal/domain/auth/usecase"
+	guesthandler "github.com/RianIhsan/go-boilerplate-v4/internal/domain/guest/handler"
+	guestusecase "github.com/RianIhsan/go-boilerplate-v4/internal/domain/guest/usecase"
+	invitationhandler "github.com/RianIhsan/go-boilerplate-v4/internal/domain/invitation/handler"
+	invitationusecase "github.com/RianIhsan/go-boilerplate-v4/internal/domain/invitation/usecase"
+	rsvphandler "github.com/RianIhsan/go-boilerplate-v4/internal/domain/rsvp/handler"
+	rsvpusecase "github.com/RianIhsan/go-boilerplate-v4/internal/domain/rsvp/usecase"
 	todohandler "github.com/RianIhsan/go-boilerplate-v4/internal/domain/todo/handler"
 	todousecase "github.com/RianIhsan/go-boilerplate-v4/internal/domain/todo/usecase"
 	"github.com/RianIhsan/go-boilerplate-v4/internal/infrastructure/database"
@@ -60,14 +66,23 @@ func main() {
 	// ── Repositories ─────────────────────────────────────────
 	userRepo := persistence.NewUserRepository(db)
 	todoRepo := persistence.NewTodoRepository(db)
+	invitationRepo := persistence.NewInvitationRepository(db)
+	guestRepo := persistence.NewGuestRepository(db)
+	rsvpRepo := persistence.NewRSVPRepository(db)
 
 	// ── Usecases ─────────────────────────────────────────────
 	authUC := authusecase.NewAuthUsecase(userRepo, jwtSvc)
 	todoUC := todousecase.NewTodoUsecase(todoRepo)
+	invitationUC := invitationusecase.NewInvitationUsecase(invitationRepo)
+	guestUC := guestusecase.NewGuestUsecase(guestRepo, invitationRepo)
+	rsvpUC := rsvpusecase.NewRSVPUsecase(rsvpRepo, invitationRepo, guestRepo)
 
 	// ── Handlers ─────────────────────────────────────────────
 	authH := authhandler.NewAuthHandler(authUC)
 	todoH := todohandler.NewTodoHandler(todoUC)
+	invitationH := invitationhandler.NewInvitationHandler(invitationUC)
+	guestH := guesthandler.NewGuestHandler(guestUC)
+	rsvpH := rsvphandler.NewRSVPHandler(rsvpUC)
 
 	// ── Middleware ───────────────────────────────────────────
 	mw := middleware.NewManager(log, jwtSvc)
@@ -79,6 +94,9 @@ func main() {
 	r.Route("/api/v1", func(r chi.Router) {
 		authhandler.RegisterRoutes(r, authH, mw.AuthRateLimit())
 		todohandler.RegisterRoutes(r, todoH, mw.Auth())
+		invitationhandler.RegisterRoutes(r, invitationH, mw.Auth(), mw.PublicRateLimit())
+		guesthandler.RegisterRoutes(r, guestH, mw.Auth(), mw.PublicRateLimit())
+		rsvphandler.RegisterRoutes(r, rsvpH, mw.Auth(), mw.PublicRateLimit())
 	})
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
